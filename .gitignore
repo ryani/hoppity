@@ -1,4 +1,10 @@
 *.suo
 *.sdf
+*.opensdf
 
 /ipch/
+/Checkers/Debug/
+/Checkers/Release/
+/Debug/
+/Release/
+
