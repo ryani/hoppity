@@ -106,7 +106,53 @@ bool NetManager::CreateServer(NetServer* pServer, const char* port)
 
 bool NetManager::CreateClient(NetConnection* pConnection, const char* host, const char* port)
 {
-	return false; // TODO
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	int err;
+	struct addrinfo* result;
+	err = getaddrinfo(host, port, &hints, &result);
+	if (err != 0)
+	{
+		printf("getaddrinfo failed: %d\n", err);
+		return false;
+	}
+
+	SOCKET clientSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (clientSocket == INVALID_SOCKET)
+	{
+		printf("socket failed: %d\n", WSAGetLastError());
+		freeaddrinfo(result);
+		return false;
+	}
+
+	// try all connections listed
+	struct addrinfo* ptr = result;
+	while (ptr)
+	{
+		err = connect(clientSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+		if (err != SOCKET_ERROR)
+			break;
+
+		ptr = ptr->ai_next;
+	}
+
+	if (err == SOCKET_ERROR)
+	{
+		printf("connect failed: %d\n", WSAGetLastError());
+		freeaddrinfo(result);
+		closesocket(clientSocket);
+		return false;
+	}
+
+	// done with addrinfo
+	freeaddrinfo(result);
+
+	pConnection->SetupConnection(clientSocket);
+	return true;
 }
 
 void NetServer::Shutdown()

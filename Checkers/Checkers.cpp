@@ -6,19 +6,15 @@
 #include <conio.h>
 #include <string>
 #include "NetMessage.h"
+#include "Console.h"
 
-
-// Thanks StackOverflow!
-int getch_noblock()
-{
-	if (_kbhit())
-		return _getch();
-
-	return -1;
-}
+const char* kPort = "8088";
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	Console console;
+	console.Initialize(GetStdHandle(STD_OUTPUT_HANDLE));
+
 	NetManager netManager;
 	if (!netManager.Initialize())
 	{
@@ -26,16 +22,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	printf("%d\n", argc);
-
 	NetConnection client;
 	NetServer server;
-
-	if (1)
+	if (argc == 1)
 	{
+		console.Write("Starting as server...\n");
 		if (!netManager.CreateServer(&server, "8088"))
 		{
-			printf("Couldn't create server\n");
+			console.Write("Couldn't create server\n");
 			return 1;
 		}
 
@@ -43,7 +37,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	else
 	{
-		if (!netManager.CreateClient(&client, "127.0.0.1", "8088"))
+		std::string host;
+		host.append(argv[1], argv[1] + lstrlen(argv[1]));
+
+		// std::string should have printf-formatting.  EASTL does it!
+		console.Write("Connecting to '");
+		console.Write(host.c_str());
+		console.Write("'...\n");
+
+		if (!netManager.CreateClient(&client, host.c_str(), "8088"))
 		{
 			printf("Couldn't create client\n");
 			return 1;
@@ -54,6 +56,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	for (;;)
 	{
+		console.Update();
+
 		const size_t kBufSize = 1024;
 		size_t receivedSize;
 		char buf[kBufSize+1];
@@ -65,22 +69,16 @@ int _tmain(int argc, _TCHAR* argv[])
 			break;
 
 		buf[receivedSize] = '\0';
-		printf("%s", buf);
-		fflush(stdout);
-
-		int kb = getch_noblock();
-		if (kb == '\n')
+		console.Write(buf);
+		if (console.ReadLine(&inputStr))
 		{
+			inputStr.push_back('\r');
 			inputStr.push_back('\n');
+			console.Write(inputStr.c_str());
 			client.Send(inputStr.c_str(), inputStr.length());
 			inputStr.clear();
-		}
-		else if (kb != -1)
-		{
-			inputStr.push_back((char)kb);
 		}
 	}
 
 	return 0;
 }
-
