@@ -13,3 +13,4 @@
 
 typedef int int32_t; // TODO: Make sure this is correct on 64-bit
 typedef __int64 int64_t;
+typedef unsigned char uint8_t;
