@@ -22,13 +22,21 @@ void ReadLine(Console& console, std::string* pInputStr)
 void DisplayHelp(Console& console)
 {
 	console.Write(
-		"q: quit\n"
-		"n: new game\n"
 		"?: this help\n"
+		"m: list legal moves\n"
+		"b: display board\n"
+		"n: new game\n"
 		"xx yy: move from space xx to space yy.\n"
 		"       Spaces are labeled a1-h8,\n"
 		"       or 01-32 (left-to-right, bottom-to-top)\n"
+		"q: quit\n"
 		);
+}
+
+void PrintBoard(Console& console, CheckerState gameState)
+{
+	console.Write("\n");
+	console.Write(gameState.PrintBoard().c_str());
 }
 
 bool DecodeMove(const std::string& str, CheckerMove* /*out*/ pMove)
@@ -55,54 +63,63 @@ int _tmain(int argc, _TCHAR* argv[])
 	char moveBuf[] = "  ->   ";
 
 	CheckerState gameState = CheckerState::kInitialState;
+	PrintBoard(console, gameState);
 	for (;;)
 	{
-		console.Write(gameState.PrintBoard().c_str());
-		auto moves = gameState.GetLegalMoves();
-		for (auto move : moves)
-		{
-			CheckerState::EncodeSpaceName(move.fromSpace, &moveBuf[0]);
-			CheckerState::EncodeSpaceName(move.toSpace, &moveBuf[4]);
-			console.Write(moveBuf);
-		}
-		console.Write("\n");
-
 		std::string inputStr;
 		ReadLine(console, &inputStr);
 
-		// quit
 		if (inputStr == "q")
+		{
+			// quit
 			break;
-
-		// help
-		if (inputStr == "?" || inputStr == "help")
+		}
+		else if (inputStr == "?" || inputStr == "help")
 		{
+			// help
 			DisplayHelp(console);
-			continue;
 		}
-
-		// new game
-		if (inputStr == "n")
+		else if (inputStr == "n")
 		{
+			// new game
 			gameState = CheckerState::kInitialState;
-			continue;
+			PrintBoard(console, gameState);
 		}
-
-		// Try to move
-		CheckerMove move;
-		if (!DecodeMove(inputStr, &move))
+		else if (inputStr == "b")
 		{
-			console.Write("Invalid command (? for help)\n");
-			continue;
+			// draw board
+			PrintBoard(console, gameState);
 		}
-
-		if (!gameState.IsLegalMove(move))
+		else if (inputStr == "m")
 		{
-			console.Write("Illegal move!\n");
-			continue;
+			// show moves
+			auto moves = gameState.GetLegalMoves();
+			for (CheckerMove move : moves)
+			{
+				CheckerState::EncodeSpaceName(move.fromSpace, &moveBuf[0]);
+				CheckerState::EncodeSpaceName(move.toSpace, &moveBuf[4]);
+				console.Write(moveBuf);
+			}
+			console.Write("\n");
 		}
-
-		gameState = gameState.ApplyMove(move);
+		else
+		{
+			// Try to move
+			CheckerMove move;
+			if (!DecodeMove(inputStr, &move))
+			{
+				console.Write("Invalid command (? for help)\n");
+			}
+			else if(!gameState.IsLegalMove(move))
+			{
+				console.Write("Illegal move!\n");
+			}
+			else
+			{
+				gameState = gameState.ApplyMove(move);
+				PrintBoard(console, gameState);
+			}
+		}
 	}
 
 	return 0;
