@@ -26,7 +26,7 @@ private:
 	void AddInputChar(int ch);
 	void UpdateInputLine();
 	void ResetCursor();
-	void WriteCharInternal(char c, const SMALL_RECT* pWindow);
+	void WriteCharInternal(char c);
 
 	HANDLE mHandle;
 	std::string mCurrentInput;

@@ -37,12 +37,17 @@ bool Console::Initialize(HANDLE consoleHandle)
 	origin.Y = mInputLineY - 1;
 	FillConsoleOutputCharacter(mHandle, TEXT('-'), info.dwSize.X, origin, nullptr);
 
-	// We start output at the top
-	mOutputX = 0;
-	mOutputY = 0;
-
 	// Put the cursor on the input line.
 	ResetCursor();
+
+	// Set up output.  Resetting the cursor scrolled the window to the bottom possible
+	// point, so now we can start at the top of the current screen.
+	if (!GetConsoleScreenBufferInfo(mHandle, &info))
+		return false;
+
+	// We start output at the top of the window
+	mOutputX = 0;
+	mOutputY = info.srWindow.Top;
 
 	return true;
 }
@@ -124,19 +129,15 @@ void Console::Write(const char *str)
 	if (!*str)
 		return;
 
-	CONSOLE_SCREEN_BUFFER_INFO info;
-	if (!GetConsoleScreenBufferInfo(mHandle, &info))
-		return;
-
 	while (*str)
 	{
-		WriteCharInternal(*str++, &info.srWindow);
+		WriteCharInternal(*str++);
 	}
 
 	ResetCursor();
 }
 
-void Console::WriteCharInternal(char c, const SMALL_RECT *pWindow)
+void Console::WriteCharInternal(char c)
 {
 	// We only handle printable characters and tabs/newlines
 	if (c != '\t' && c != '\n' && !isprint(c))
@@ -152,8 +153,8 @@ void Console::WriteCharInternal(char c, const SMALL_RECT *pWindow)
 		if (mOutputY == mInputLineY - 1)
 		{
 			mOutputY--;
-			SMALL_RECT scrollRect = { 0, 0, mWidth, mOutputY };
-			COORD destOrigin = { 0, -1 };
+			SMALL_RECT scrollRect = { 0, 1, mWidth, mInputLineY - 2 };
+			COORD destOrigin = { 0, 0 };
 			CHAR_INFO chFill;
 			chFill.Char.UnicodeChar = TEXT(' ');
 			chFill.Attributes = mDefaultAttributes;
@@ -170,7 +171,7 @@ void Console::WriteCharInternal(char c, const SMALL_RECT *pWindow)
 		// TODO: Handle end-of-line tab better
 		int n = 4 - (mOutputX % 4);
 		for (int i = 0; i < n; ++i)
-			WriteCharInternal(' ', pWindow);
+			WriteCharInternal(' ');
 		return;
 	}
 
@@ -185,7 +186,7 @@ void Console::WriteCharInternal(char c, const SMALL_RECT *pWindow)
 
 	COORD chSize = { 1, 1 };
 	COORD chPos = { 0, 0 };
-	SMALL_RECT consoleRect = { mOutputX, pWindow->Top + mOutputY, mOutputX, pWindow->Top + mOutputY };
+	SMALL_RECT consoleRect = { mOutputX, mOutputY, mOutputX, mOutputY };
 	WriteConsoleOutput(mHandle, ch, chSize, chPos, &consoleRect);
 
 	// Move right
