@@ -37,6 +37,25 @@ std::string CheckerState::PrintBoard() const
 		board[y*11 + x] = spaceChar;
 	}
 
+	switch (mTurn)
+	{
+	case TURN_BLACK:
+		board.append(" X TO MOVE\n");
+		break;
+	case TURN_RED:
+		board.append(" O TO MOVE\n");
+		break;
+	case END_BLACK:
+		board.append(" X WINS!\n");
+		break;
+	case END_RED:
+		board.append(" O WINS!\n");
+		break;
+	case END_DRAW:
+		board.append(" DRAW!\n");
+		break;
+	}
+
 	return board;
 }
 

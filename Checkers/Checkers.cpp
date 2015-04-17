@@ -30,6 +30,8 @@ void DisplayHelp(Console& console)
 		"       Spaces are labeled a1-h8,\n"
 		"       or 01-32 (left-to-right, bottom-to-top)\n"
 		"q: quit\n"
+		"\n"
+		"Disclaimer: currently can't parse or apply moves!\n"
 		);
 }
 
