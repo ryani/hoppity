@@ -21,7 +21,21 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	console.Write(CheckerState::kInitialState.PrintBoard().c_str());
+	// I wish std::string had printf formatting.
+	char moveBuf[] = "  ->   ";
+
+	CheckerState gameState = CheckerState::kInitialState;
+
+	console.Write(gameState.PrintBoard().c_str());
+	auto moves = gameState.GetLegalMoves();
+	for (auto move : moves)
+	{
+		CheckerState::EncodeSpaceName(move.fromSpace, &moveBuf[0]);
+		CheckerState::EncodeSpaceName(move.toSpace, &moveBuf[4]);
+		console.Write(moveBuf);
+	}
+	console.Write("\n");
+	
 	for (;;)
 	{
 		console.Update();

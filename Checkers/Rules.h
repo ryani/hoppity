@@ -50,8 +50,10 @@ public:
 	CheckerState() = default;
 	CheckerState(int64_t board, int32_t kings, Turn turn);
 
-	const int kKingFlag = 4;
-	const int kColorMask = 3;
+	static const int kNumSpaces = 32;
+
+	static const int kKingFlag = 4;
+	static const int kColorMask = 3;
 	enum Space {
 		EMPTY = 0,
 		BLACK = 2,
@@ -95,7 +97,7 @@ public:
 
 inline int CheckerState::UpLeft(int space)
 {
-	if ((space & 7) == 0 || (space & 0x1c) != 0)
+	if ((space & 7) == 0 || (space & 0x1c) == 0)
 		return -1;
 	if (space & 4)
 		return space + 4;
@@ -122,7 +124,7 @@ inline int CheckerState::DownLeft(int space)
 
 inline int CheckerState::DownRight(int space)
 {
-	if ((space & 7) == 7 || (space & 0x1c) == 0)
+	if ((space & 7) == 7 || (space & 0x1c) == 0x1c)
 		return -1;
 	if (space & 4)
 		return space - 3;

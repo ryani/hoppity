@@ -21,7 +21,7 @@ std::string CheckerState::PrintBoard() const
 		"- - - -  1\n"
 		"abcdefgh  \n";
 
-	for (int spaceId = 0; spaceId < 32; ++spaceId)
+	for (int spaceId = 0; spaceId < kNumSpaces; ++spaceId)
 	{
 		Space space = GetSpace(spaceId);
 		const char* kSpaceTypes = "-?xo#!XO";
@@ -88,7 +88,7 @@ int CheckerState::DecodeSpaceName(const char* name)
 		spaceId = y * 4 + x / 2;
 	}
 
-	if (spaceId >= 0 && spaceId < 32)
+	if (spaceId >= 0 && spaceId < kNumSpaces)
 		return spaceId;
 
 	return -1;
@@ -97,7 +97,7 @@ int CheckerState::DecodeSpaceName(const char* name)
 void CheckerState::EncodeSpaceName(int spaceId, char buf[2])
 {
 	// handle invalid space ids
-	if (spaceId < 0 || spaceId >= 32)
+	if (spaceId < 0 || spaceId >= kNumSpaces)
 	{
 		buf[0] = buf[1] = '?';
 		return;
@@ -115,10 +115,157 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 {
 	std::vector<CheckerMove> results;
 
-	// no moves if game is over
-	if (mTurn >= END_BLACK)
+	Space turnColor =
+		(mTurn == TURN_BLACK) ? BLACK
+		: (mTurn == TURN_RED) ? RED
+		: EMPTY;
+
+	if (turnColor == EMPTY)
+	{
+		// game is over, no legal moves
+		return results;
+	}
+
+	Space oppColor = (turnColor == BLACK) ? RED : BLACK;
+
+	// First check for capture moves
+	for (int spaceId = 0; spaceId < kNumSpaces; ++spaceId)
+	{
+		Space space = GetSpace(spaceId);
+		if ((space & kColorMask) != turnColor)
+			continue;
+
+		// TODO: Refactor (DRY); capture code copy-and-pasted.
+
+		// Check for upwards capture
+		if (turnColor == BLACK || (space & kKingFlag) != 0)
+		{
+			int adjacentSpaceId, jumpSpaceId;
+			Space adjacentSpace, jumpSpace;
+
+			adjacentSpaceId = UpLeft(spaceId);
+			jumpSpaceId = (adjacentSpaceId >= 0) ? UpLeft(adjacentSpaceId) : -1;
+			if (jumpSpaceId >= 0)
+			{
+				assert(adjacentSpaceId >= 0);
+				adjacentSpace = GetSpace(adjacentSpaceId);
+				jumpSpace = GetSpace(jumpSpaceId);
+
+				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
+				{
+					CheckerMove move = { spaceId, jumpSpaceId };
+					results.push_back(move);
+				}
+			}
+
+			adjacentSpaceId = UpRight(spaceId);
+			jumpSpaceId = (adjacentSpaceId >= 0) ? UpRight(adjacentSpaceId) : -1;
+			if (jumpSpaceId >= 0)
+			{
+				assert(adjacentSpaceId >= 0);
+				adjacentSpace = GetSpace(adjacentSpaceId);
+				jumpSpace = GetSpace(jumpSpaceId);
+
+				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
+				{
+					CheckerMove move = { spaceId, jumpSpaceId };
+					results.push_back(move);
+				}
+			}
+		}
+
+		// Check for downwards capture
+		if (turnColor == RED || (space & kKingFlag) != 0)
+		{
+			int adjacentSpaceId, jumpSpaceId;
+			Space adjacentSpace, jumpSpace;
+
+			adjacentSpaceId = DownLeft(spaceId);
+			jumpSpaceId = (adjacentSpaceId >= 0) ? DownLeft(adjacentSpaceId) : -1;
+			if (jumpSpaceId >= 0)
+			{
+				assert(adjacentSpaceId >= 0);
+				adjacentSpace = GetSpace(adjacentSpaceId);
+				jumpSpace = GetSpace(jumpSpaceId);
+
+				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
+				{
+					CheckerMove move = { spaceId, jumpSpaceId };
+					results.push_back(move);
+				}
+			}
+
+			adjacentSpaceId = DownRight(spaceId);
+			jumpSpaceId = (adjacentSpaceId >= 0) ? DownRight(adjacentSpaceId) : -1;
+			if (jumpSpaceId >= 0)
+			{
+				assert(adjacentSpaceId >= 0);
+				adjacentSpace = GetSpace(adjacentSpaceId);
+				jumpSpace = GetSpace(jumpSpaceId);
+
+				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
+				{
+					CheckerMove move = { spaceId, jumpSpaceId };
+					results.push_back(move);
+				}
+			}
+		}
+	}
+
+	// if there are any legal captures, no other moves are legal
+	if (!results.empty())
 		return results;
 
-	// TODO
+	// Add regular moves
+	for (int spaceId = 0; spaceId < kNumSpaces; ++spaceId)
+	{
+		Space space = GetSpace(spaceId);
+		if ((space & kColorMask) != turnColor)
+			continue;
+
+		// TODO: Refactor (DRY); move code copy-and-pasted.
+
+		// Check for upwards move
+		if (turnColor == BLACK || (space & kKingFlag) != 0)
+		{
+			int adjacentSpaceId;
+
+			adjacentSpaceId = UpLeft(spaceId);
+			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
+			{
+				CheckerMove move = { spaceId, adjacentSpaceId };
+				results.push_back(move);
+			}
+
+			adjacentSpaceId = UpRight(spaceId);
+			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
+			{
+				CheckerMove move = { spaceId, adjacentSpaceId };
+				results.push_back(move);
+			}
+		}
+
+		// Check for downwards move
+		if (turnColor == RED || (space & kKingFlag) != 0)
+		{
+			int adjacentSpaceId;
+
+			adjacentSpaceId = DownLeft(spaceId);
+			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
+			{
+				CheckerMove move = { spaceId, adjacentSpaceId };
+				results.push_back(move);
+			}
+
+			adjacentSpaceId = DownRight(spaceId);
+			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
+			{
+				CheckerMove move = { spaceId, adjacentSpaceId };
+				results.push_back(move);
+			}
+		}
+	}
+
 	return results;
 }
+
