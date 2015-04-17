@@ -19,6 +19,18 @@ void ReadLine(Console& console, std::string* pInputStr)
 	}
 }
 
+void DisplayHelp(Console& console)
+{
+	console.Write(
+		"q: quit\n"
+		"n: new game\n"
+		"?: this help\n"
+		"xx yy: move from space xx to space yy.\n"
+		"       Spaces are labeled a1-h8,\n"
+		"       or 01-32 (left-to-right, bottom-to-top)\n"
+		);
+}
+
 bool DecodeMove(const std::string& str, CheckerMove* /*out*/ pMove)
 {
 	// TODO
@@ -58,10 +70,29 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::string inputStr;
 		ReadLine(console, &inputStr);
 
+		// quit
+		if (inputStr == "q")
+			break;
+
+		// help
+		if (inputStr == "?" || inputStr == "help")
+		{
+			DisplayHelp(console);
+			continue;
+		}
+
+		// new game
+		if (inputStr == "n")
+		{
+			gameState = CheckerState::kInitialState;
+			continue;
+		}
+
+		// Try to move
 		CheckerMove move;
 		if (!DecodeMove(inputStr, &move))
 		{
-			console.Write("Couldn't understand that move\n");
+			console.Write("Invalid command (? for help)\n");
 			continue;
 		}
 
