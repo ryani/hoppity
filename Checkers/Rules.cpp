@@ -153,7 +153,7 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 
 				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
 				{
-					CheckerMove move = { spaceId, jumpSpaceId };
+					CheckerMove move = { spaceId, jumpSpaceId, adjacentSpaceId };
 					results.push_back(move);
 				}
 			}
@@ -168,7 +168,7 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 
 				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
 				{
-					CheckerMove move = { spaceId, jumpSpaceId };
+					CheckerMove move = { spaceId, jumpSpaceId, adjacentSpaceId };
 					results.push_back(move);
 				}
 			}
@@ -190,7 +190,7 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 
 				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
 				{
-					CheckerMove move = { spaceId, jumpSpaceId };
+					CheckerMove move = { spaceId, jumpSpaceId, adjacentSpaceId };
 					results.push_back(move);
 				}
 			}
@@ -205,7 +205,7 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 
 				if (jumpSpace == EMPTY && (adjacentSpace & kColorMask) == oppColor)
 				{
-					CheckerMove move = { spaceId, jumpSpaceId };
+					CheckerMove move = { spaceId, jumpSpaceId, adjacentSpaceId };
 					results.push_back(move);
 				}
 			}
@@ -233,14 +233,14 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 			adjacentSpaceId = UpLeft(spaceId);
 			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
 			{
-				CheckerMove move = { spaceId, adjacentSpaceId };
+				CheckerMove move = { spaceId, adjacentSpaceId, -1 };
 				results.push_back(move);
 			}
 
 			adjacentSpaceId = UpRight(spaceId);
 			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
 			{
-				CheckerMove move = { spaceId, adjacentSpaceId };
+				CheckerMove move = { spaceId, adjacentSpaceId, -1 };
 				results.push_back(move);
 			}
 		}
@@ -253,14 +253,14 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 			adjacentSpaceId = DownLeft(spaceId);
 			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
 			{
-				CheckerMove move = { spaceId, adjacentSpaceId };
+				CheckerMove move = { spaceId, adjacentSpaceId, -1 };
 				results.push_back(move);
 			}
 
 			adjacentSpaceId = DownRight(spaceId);
 			if (adjacentSpaceId >= 0 && GetSpace(adjacentSpaceId) == EMPTY)
 			{
-				CheckerMove move = { spaceId, adjacentSpaceId };
+				CheckerMove move = { spaceId, adjacentSpaceId, -1 };
 				results.push_back(move);
 			}
 		}
@@ -269,3 +269,21 @@ std::vector<CheckerMove> CheckerState::GetLegalMoves() const
 	return results;
 }
 
+bool CheckerState::IsLegalMove(CheckerMove move) const
+{
+	// TODO: This is just about the worst possible way to go about this.
+	//
+	// The difficult part of deciding if a move is legal is checking for another legal
+	// capture move.
+	//
+	// IDEA: Should cache whether a capture move is available or not in the
+	//       game state.  Should be easy to calculate with some masking operations.
+	std::vector<CheckerMove> moves = GetLegalMoves();
+	return (std::find(moves.begin(), moves.end(), move) != moves.end());
+}
+
+CheckerState CheckerState::ApplyMove(CheckerMove move) const
+{
+	// TODO
+	return *this;
+}

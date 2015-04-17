@@ -34,6 +34,9 @@ struct CheckerMove
 {
 	uint8_t fromSpace;
 	uint8_t toSpace;
+	uint8_t jumpSpace;
+
+	bool operator==(const CheckerMove& rhs) { return rhs.fromSpace == fromSpace && rhs.toSpace == toSpace; }
 };
 
 class CheckerState
@@ -48,6 +51,9 @@ public:
 	};
 
 	CheckerState() = default;
+	CheckerState(const CheckerState&) = default;
+	CheckerState& operator=(const CheckerState&) = default;
+
 	CheckerState(int64_t board, int32_t kings, Turn turn);
 
 	static const int kNumSpaces = 32;
@@ -76,6 +82,8 @@ public:
 
 	std::string PrintBoard() const;
 	std::vector<CheckerMove> GetLegalMoves() const;
+	bool IsLegalMove(CheckerMove move) const;
+	CheckerState ApplyMove(CheckerMove move) const; // move must be legal
 
 public:
 	// Static stuff
@@ -90,6 +98,7 @@ public:
 	// a1 -> 0, for example
 	static int DecodeSpaceName(const char* name);
 	static void EncodeSpaceName(int spaceId, char buf[2]);
+	static CheckerMove BuildMove(int fromSpace, int toSpace);
 
 	static void ToXY(int spaceId, int& x, int& y);
 };
@@ -163,4 +172,5 @@ inline void CheckerState::ToXY(int spaceId, int& x, int& y)
 	y = (spaceId >> 2);
 	x += (y & 1);
 }
+
 #endif // RULES_H
